@@ -1,21 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  MessageSquare, Target, BarChart3, Palette, Users,
-  ArrowRight, ChevronLeft, Search, BookOpen, Zap, TrendingUp, Award, Sparkles
+import React, { useState, useEffect } from 'react';
+import { 
+  MessageSquare, 
+  Target, 
+  BarChart3, 
+  Palette, 
+  Info, 
+  Users, 
+  ArrowRight,
+  ChevronLeft,
+  Search,
+  BookOpen,
+  ShieldCheck
 } from 'lucide-react';
 
-const FONTS = `@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,400&family=Syne:wght@400;600;700;800&display=swap');`;
-
+// Mock Data for Chatbots
 const CHATBOTS = [
   {
     id: 'community-manager',
     name: 'Elena Social',
     role: 'Community Manager',
-    icon: <Users className="w-5 h-5" />,
-    accent: '#3B82F6',
-    accentLight: '#EFF6FF',
-    accentDark: '#1D4ED8',
-    tag: 'Redes & Comunidad',
+    icon: <Users className="w-6 h-6" />,
+    color: 'bg-blue-500',
     description: 'Experta en gestión de comunidades y tono de voz en redes sociales.',
     personality: 'Cercana, energética y siempre al día con las tendencias.',
     chat: [
@@ -29,11 +34,8 @@ const CHATBOTS = [
     id: 'estratega',
     name: 'Marcus Plan',
     role: 'Estratega CIM',
-    icon: <Target className="w-5 h-5" />,
-    accent: '#6366F1',
-    accentLight: '#EEF2FF',
-    accentDark: '#4338CA',
-    tag: 'Estrategia Global',
+    icon: <Target className="w-6 h-6" />,
+    color: 'bg-indigo-600',
     description: 'Especialista en alineación estratégica y omnicanalidad.',
     personality: 'Profesional, estructurado y enfocado en la visión global.',
     chat: [
@@ -47,11 +49,8 @@ const CHATBOTS = [
     id: 'analista',
     name: 'Dr. Data',
     role: 'Analista de Métricas',
-    icon: <BarChart3 className="w-5 h-5" />,
-    accent: '#F97316',
-    accentLight: '#FFF7ED',
-    accentDark: '#C2410C',
-    tag: 'ROI & Analytics',
+    icon: <BarChart3 className="w-6 h-6" />,
+    color: 'bg-orange-500',
     description: 'Experto en ROI, conversión y comportamiento del consumidor.',
     personality: 'Preciso, lógico y basado en evidencias numéricas.',
     chat: [
@@ -65,11 +64,8 @@ const CHATBOTS = [
     id: 'creativo',
     name: 'Santi Creativo',
     role: 'Creativo Publicitario',
-    icon: <Palette className="w-5 h-5" />,
-    accent: '#A855F7',
-    accentLight: '#FAF5FF',
-    accentDark: '#7E22CE',
-    tag: 'Creatividad Visual',
+    icon: <Palette className="w-6 h-6" />,
+    color: 'bg-purple-500',
     description: 'Especialista en conceptos visuales e impacto emocional.',
     personality: 'Inspirador, visual y disruptivo.',
     chat: [
@@ -81,278 +77,141 @@ const CHATBOTS = [
   }
 ];
 
-const PILLARS = [
-  { num: '01', title: 'Coherencia', desc: 'Los mensajes deben relacionarse entre sí y reforzar un mensaje central único a través de todos los puntos de contacto.', color: '#3B82F6' },
-  { num: '02', title: 'Consistencia', desc: 'El mensaje no puede ser contradictorio. La marca debe hablar con una sola voz sin importar el canal.', color: '#6366F1' },
-  { num: '03', title: 'Continuidad', desc: 'Comunicación sostenida en el tiempo que construye reconocimiento y confianza de forma progresiva.', color: '#F97316' },
-  { num: '04', title: 'Complementariedad', desc: 'La suma de las partes es mayor al todo. Cada canal amplifica el impacto de los demás.', color: '#A855F7' },
-];
-
-const globalStyles = `
-  ${FONTS}
-  .cim-display { font-family: 'Fraunces', serif; }
-  .cim-ui { font-family: 'Syne', sans-serif; }
-  .cim-body { font-family: 'Syne', sans-serif; }
-  
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  
-  @keyframes shimmer {
-    0% { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-
-  .fade-up { animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) both; }
-  .fade-up-1 { animation-delay: 0.05s; }
-  .fade-up-2 { animation-delay: 0.12s; }
-  .fade-up-3 { animation-delay: 0.2s; }
-  .fade-up-4 { animation-delay: 0.28s; }
-  
-  .shimmer-text {
-    background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 30%, #818cf8 50%, #3b82f6 70%, #1e3a8a 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 4s linear infinite;
-  }
-
-  .floating-icon {
-    animation: float 4s ease-in-out infinite;
-  }
-
-  .bot-card-inner { transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease; }
-  .bot-card:hover .bot-card-inner { transform: translateY(-8px); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.15); }
-  
-  .nav-link { position: relative; }
-  .nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: #3b82f6; transition: width 0.3s ease; }
-  .nav-link.active::after, .nav-link:hover::after { width: 100%; }
-  
-  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
-  
-  .hero-bg {
-    background: radial-gradient(circle at top right, rgba(59,130,246,0.1) 0%, transparent 40%),
-                radial-gradient(circle at bottom left, rgba(99,102,241,0.08) 0%, transparent 40%),
-                #FAFAFA;
-  }
-`;
-
-export default function App() {
-  const [view, setView] = useState('landing');
+const App = () => {
+  const [view, setView] = useState('landing'); // landing, dashboard, chat, education
   const [selectedBot, setSelectedBot] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const chatEndRef = useRef(null);
 
-  useEffect(() => {
-    if (view === 'chat' && chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [view, selectedBot]);
-
-  const filteredBots = CHATBOTS.filter(bot =>
-    bot.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    bot.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    bot.tag.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredBots = CHATBOTS.filter(bot => 
+    bot.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    bot.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const navigate = (dest) => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setView(dest);
-  };
-
   const renderLanding = () => (
-    <div className="hero-bg min-h-screen">
-      <div className="max-w-6xl mx-auto px-6 pt-24 pb-20">
-        <div className="text-center mb-16">
-          <div className="fade-up fade-up-1 mb-6 inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm text-xs font-bold text-slate-600 tracking-wider uppercase">
-            <Sparkles size={14} className="text-blue-500" />
-            Simulador de Estrategia Publicitaria
-          </div>
-
-          <h1 className="cim-display fade-up fade-up-2 mb-8"
-            style={{ fontSize: 'clamp(48px, 9vw, 96px)', fontWeight: 900, lineHeight: 0.9, letterSpacing: '-3px', color: '#0F172A' }}>
-            Marketing <br />
-            <span className="shimmer-text">Integrado</span><br />
-            <span style={{ fontStyle: 'italic', fontWeight: 300 }}>con Propósito</span>
-          </h1>
-
-          <p className="cim-body fade-up fade-up-3 mx-auto mb-12 text-lg text-slate-500 max-w-xl leading-relaxed">
-            Explora la sinergia de canales a través de diálogos con mentores virtuales. Domina la coherencia, consistencia y el impacto de marca.
-          </p>
-
-          <div className="fade-up fade-up-4 flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button onClick={() => navigate('dashboard')}
-              className="cim-ui bg-slate-900 text-white px-10 py-5 rounded-2xl font-bold text-base transition-all hover:bg-slate-800 hover:scale-105 active:scale-95 shadow-xl shadow-slate-200 flex items-center gap-3">
-              Comenzar Simulación <ArrowRight size={20} />
-            </button>
-            <button onClick={() => navigate('education')}
-              className="cim-ui bg-white text-slate-700 border-2 border-slate-100 px-10 py-5 rounded-2xl font-bold text-base transition-all hover:border-blue-400 hover:text-blue-600 flex items-center gap-3">
-              <BookOpen size={20} /> Guía Académica
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 fade-up" style={{ animationDelay: '0.4s' }}>
-          {CHATBOTS.map((bot, i) => (
-            <div key={bot.id} 
-              onClick={() => { setSelectedBot(bot); navigate('chat'); }}
-              className="group cursor-pointer bg-white p-8 rounded-3xl border border-slate-100 shadow-sm transition-all hover:border-blue-200 hover:shadow-xl hover:-translate-y-2">
-              <div className="mb-6 flex items-center justify-between">
-                <div style={{ background: bot.accentLight, color: bot.accent }} className="w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110">
-                  {React.cloneElement(bot.icon, { size: 28 })}
-                </div>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300">
-                  <ArrowRight size={20} />
-                </div>
-              </div>
-              <h3 className="cim-ui text-xl font-extrabold text-slate-900 mb-1">{bot.name}</h3>
-              <p className="cim-ui text-xs font-bold uppercase tracking-widest mb-4" style={{ color: bot.accent }}>{bot.tag}</p>
-              <p className="cim-body text-sm text-slate-500 leading-relaxed line-clamp-2">{bot.description}</p>
-            </div>
-          ))}
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4">
+      <div className="mb-6 p-4 bg-blue-100 rounded-full animate-bounce">
+        <ShieldCheck className="w-12 h-12 text-blue-600" />
+      </div>
+      <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mb-6">
+        <span className="text-blue-600">Admin</span> Master
+      </h1>
+      <p className="text-xl text-slate-600 max-w-2xl mb-10 leading-relaxed">
+        El centro de mando definitivo para las <strong>Comunicaciones Integradas de Marketing</strong>. Aprende de expertos y domina la coherencia estratégica.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button 
+          onClick={() => setView('dashboard')}
+          className="px-8 py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-blue-200"
+        >
+          Acceder al Panel <ArrowRight className="w-5 h-5" />
+        </button>
+        <button 
+          onClick={() => setView('education')}
+          className="px-8 py-4 bg-white text-slate-700 border border-slate-200 rounded-xl font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+        >
+          Manual de CIM <BookOpen className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );
 
   const renderDashboard = () => (
-    <div className="max-w-6xl mx-auto px-6 py-16">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
-        <div className="fade-up">
-          <span className="cim-ui text-blue-500 font-black text-xs tracking-widest uppercase mb-3 block">Mentoría Especializada</span>
-          <h2 className="cim-display text-5xl font-black text-slate-900 tracking-tight leading-none">
-            Panel de <br /><span className="italic font-light">Expertos CIM</span>
-          </h2>
+    <div className="max-w-6xl mx-auto px-4 py-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900">Admin Master Expertos</h2>
+          <p className="text-slate-500">Gestione y aprenda de los líderes en cada área del marketing.</p>
         </div>
-        <div className="fade-up fade-up-2 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input
-            type="text"
-            placeholder="Filtrar por rol o nombre..."
-            className="cim-ui w-full md:w-80 pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-400 transition-all text-slate-600"
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+          <input 
+            type="text" 
+            placeholder="Buscar experto o rol..." 
+            className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg w-full md:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {filteredBots.map((bot, i) => (
-          <div key={bot.id} 
-            className="bot-card fade-up"
-            style={{ animationDelay: `${i * 0.1}s` }}
-            onClick={() => { setSelectedBot(bot); navigate('chat'); }}>
-            <div className="bot-card-inner bg-white rounded-[32px] border border-slate-100 overflow-hidden group cursor-pointer h-full">
-              <div className="h-2 w-full" style={{ background: `linear-gradient(90deg, ${bot.accent}, ${bot.accentDark})` }} />
-              <div className="p-10">
-                <div className="flex items-start justify-between mb-8">
-                  <div className="flex gap-6 items-center">
-                    <div style={{ background: bot.accentLight, color: bot.accent }} className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0">
-                      {React.cloneElement(bot.icon, { size: 32 })}
-                    </div>
-                    <div>
-                      <h3 className="cim-ui text-2xl font-black text-slate-900 mb-1">{bot.name}</h3>
-                      <span className="cim-ui text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider" 
-                            style={{ background: bot.accentLight, color: bot.accent }}>
-                        {bot.role}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <p className="cim-body text-slate-500 text-base leading-relaxed mb-8">{bot.description}</p>
-                <div className="flex items-center justify-between pt-8 border-t border-slate-50">
-                  <span className="cim-ui text-sm font-bold italic text-slate-400">"{bot.personality}"</span>
-                  <div className="flex gap-1.5">
-                    {[1,2,3].map(dot => (
-                      <div key={dot} className="w-1.5 h-1.5 rounded-full" style={{ background: bot.accent, opacity: 0.3 }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {filteredBots.map((bot) => (
+          <div 
+            key={bot.id}
+            className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all group cursor-pointer"
+            onClick={() => {
+              setSelectedBot(bot);
+              setView('chat');
+            }}
+          >
+            <div className={`${bot.color} text-white w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+              {bot.icon}
             </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-1">{bot.name}</h3>
+            <p className="text-sm font-semibold text-blue-600 mb-3">{bot.role}</p>
+            <p className="text-slate-600 text-sm mb-6 line-clamp-2">{bot.description}</p>
+            <button className="w-full py-2 bg-slate-50 text-slate-700 rounded-lg text-sm font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors border border-slate-100">
+              Consultar Experto
+            </button>
           </div>
         ))}
-        {filteredBots.length === 0 && (
-          <div className="col-span-full py-20 text-center bg-slate-50 rounded-[32px] border-2 border-dashed border-slate-200">
-            <p className="cim-ui text-slate-400 font-bold">No se encontraron expertos para tu búsqueda.</p>
-          </div>
-        )}
       </div>
     </div>
   );
 
   const renderChat = () => (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="flex items-center justify-between mb-8 fade-up">
-        <button onClick={() => navigate('dashboard')}
-          className="cim-ui flex items-center gap-2 text-slate-500 font-bold hover:text-blue-600 transition-colors">
-          <ChevronLeft size={20} /> Panel de Expertos
-        </button>
-        <div className="px-4 py-2 bg-white rounded-full border border-slate-100 text-[11px] font-black text-slate-400 uppercase tracking-widest">
-          Caso Práctico: Lanzamiento 2025
-        </div>
-      </div>
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <button 
+        onClick={() => setView('dashboard')}
+        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 mb-6 transition-colors font-medium"
+      >
+        <ChevronLeft className="w-5 h-5" /> Volver al Panel Maestro
+      </button>
 
-      <div className="fade-up fade-up-1 bg-white rounded-[40px] border border-slate-100 shadow-2xl overflow-hidden flex flex-col h-[75vh]">
+      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col h-[70vh]">
         {/* Chat Header */}
-        <div className="p-8 flex items-center justify-between" style={{ background: `linear-gradient(135deg, ${selectedBot.accentDark} 0%, ${selectedBot.accent} 100%)` }}>
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
-              {React.cloneElement(selectedBot.icon, { size: 32 })}
+        <div className={`${selectedBot.color} p-6 text-white flex items-center justify-between`}>
+          <div className="flex items-center gap-4">
+            <div className="bg-white/20 p-3 rounded-full">
+              {selectedBot.icon}
             </div>
             <div>
-              <h3 className="cim-ui text-2xl font-black text-white leading-tight">{selectedBot.name}</h3>
-              <p className="cim-ui text-sm text-white/70 font-bold tracking-wide uppercase">{selectedBot.role}</p>
+              <h3 className="text-xl font-bold">{selectedBot.name}</h3>
+              <p className="text-white/80 text-sm italic">{selectedBot.role}</p>
             </div>
           </div>
-          <div className="hidden sm:flex items-center gap-3 bg-black/10 px-4 py-2 rounded-xl border border-white/10">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="cim-ui text-[11px] font-black text-white uppercase">Activo para consulta</span>
+          <div className="hidden sm:block">
+            <span className="bg-black/20 px-3 py-1 rounded-full text-xs font-mono">ID: {selectedBot.id.toUpperCase()}</span>
           </div>
         </div>
 
-        {/* Chat Content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar bg-slate-50/30">
-          <div className="text-center py-4">
-             <span className="cim-ui text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Inicio de la sesión de mentoría</span>
-          </div>
-          
-          {selectedBot.chat.map((msg, idx) => (
-            <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[85%] sm:max-w-[70%] rounded-3xl p-6 shadow-sm flex flex-col gap-2 ${
+        {/* Personality Badge */}
+        <div className="bg-slate-50 px-6 py-2 border-b border-slate-100 italic text-xs text-slate-500 flex justify-between">
+          <span>Personalidad: {selectedBot.personality}</span>
+          <span>Status: Sesión Grabada</span>
+        </div>
+
+        {/* Chat Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/30">
+          {selectedBot.chat.map((msg, index) => (
+            <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[85%] p-4 rounded-2xl ${
                 msg.role === 'user' 
-                  ? 'bg-slate-900 text-white rounded-tr-none' 
-                  : 'bg-white border border-slate-100 text-slate-700 rounded-tl-none'
+                  ? 'bg-blue-600 text-white rounded-br-none shadow-md' 
+                  : 'bg-white border border-slate-200 text-slate-800 rounded-bl-none shadow-sm'
               }`}>
-                <p className="cim-body text-sm leading-relaxed">{msg.content}</p>
-                <span className={`text-[10px] font-bold uppercase tracking-wider opacity-40 text-right`}>
-                  {msg.role === 'user' ? 'Tú' : selectedBot.name}
-                </span>
+                <p className="text-sm md:text-base leading-relaxed">
+                  {msg.content}
+                </p>
               </div>
             </div>
           ))}
-          <div ref={chatEndRef} />
         </div>
 
         {/* Chat Input Placeholder */}
-        <div className="p-6 bg-white border-t border-slate-50">
-          <div className="bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
-            <div className="flex items-center gap-3 text-slate-400">
-              <MessageSquare size={18} />
-              <span className="cim-ui text-sm font-bold">Simulación de lectura: Analiza la respuesta del experto</span>
-            </div>
-            <div className="flex gap-2">
-              <button className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg text-xs font-black uppercase tracking-wider">Siguiente</button>
-            </div>
+        <div className="p-4 bg-white border-t border-slate-100">
+          <div className="flex gap-2 items-center text-slate-400 bg-slate-50 px-4 py-2 rounded-full text-sm italic border border-slate-100">
+            <ShieldCheck className="w-4 h-4 text-blue-500" /> Registro de conversación autenticado por Admin Master
           </div>
         </div>
       </div>
@@ -360,113 +219,123 @@ export default function App() {
   );
 
   const renderEducation = () => (
-    <div className="max-w-4xl mx-auto px-6 py-16">
-      <button onClick={() => navigate('landing')}
-        className="cim-ui flex items-center gap-2 text-slate-500 font-bold hover:text-blue-600 transition-colors mb-12">
-        <ChevronLeft size={20} /> Regresar
+    <div className="max-w-4xl mx-auto px-4 py-10">
+      <button 
+        onClick={() => setView('landing')}
+        className="flex items-center gap-2 text-slate-500 hover:text-blue-600 mb-8 transition-colors font-medium"
+      >
+        <ChevronLeft className="w-5 h-5" /> Regresar
       </button>
 
-      <div className="fade-up mb-16">
-        <span className="cim-ui text-blue-500 font-black text-xs tracking-widest uppercase mb-3 block">Fundamentos</span>
-        <h2 className="cim-display text-6xl font-black text-slate-900 leading-none mb-8 tracking-tighter">
-          Dominando la <br /><span className="italic font-light">Estrategia CIM</span>
-        </h2>
-        <div className="p-8 bg-blue-50 rounded-[32px] border-l-8 border-blue-500">
-           <p className="cim-body text-lg text-blue-900 font-medium leading-relaxed">
-            "La CIM no es solo marketing multicanal; es la orquestación perfecta de la voz de una marca para que el consumidor siempre reciba la misma promesa, sin importar el punto de contacto."
-           </p>
-        </div>
-      </div>
+      <div className="space-y-12">
+        <header className="border-b border-slate-200 pb-8">
+          <h2 className="text-4xl font-bold text-slate-900 mb-4">Manual Estratégico CIM</h2>
+          <p className="text-lg text-slate-600">
+            La Comunicación Integrada de Marketing (CIM) es el estándar de oro para las marcas modernas gestionadas en <span className="font-bold text-blue-600">Admin Master</span>.
+          </p>
+        </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
-        {PILLARS.map((p, i) => (
-          <div key={i} className="fade-up bg-white p-10 rounded-[32px] border border-slate-100 hover:border-blue-200 transition-all group"
-               style={{ animationDelay: `${i * 0.1}s` }}>
-            <span className="cim-display text-5xl font-black text-slate-100 group-hover:text-blue-50 transition-colors mb-4 block leading-none">{p.num}</span>
-            <h4 className="cim-ui text-xl font-black text-slate-900 mb-3" style={{ color: p.color }}>{p.title}</h4>
-            <p className="cim-body text-slate-500 text-sm leading-relaxed">{p.desc}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-white p-8 rounded-2xl border-l-4 border-l-blue-600 shadow-sm border border-slate-100">
+            <h3 className="text-xl font-bold text-blue-600 mb-4">Los 4 Pilares Fundamentales</h3>
+            <ul className="space-y-4 text-slate-600">
+              <li className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                <div><strong>Coherencia:</strong> Alineación absoluta de todos los mensajes.</div>
+              </li>
+              <li className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                <div><strong>Consistencia:</strong> Ausencia total de contradicciones en el discurso.</div>
+              </li>
+              <li className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                <div><strong>Continuidad:</strong> Mantenimiento estratégico a largo plazo.</div>
+              </li>
+              <li className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold shrink-0">4</div>
+                <div><strong>Complementariedad:</strong> Sinergia entre canales para potenciar el ROI.</div>
+              </li>
+            </ul>
           </div>
-        ))}
-      </div>
 
-      <div className="fade-up bg-slate-900 rounded-[48px] p-12 text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="absolute top-10 left-10 w-40 h-40 bg-blue-500 rounded-full blur-[80px]" />
-          <div className="absolute bottom-10 right-10 w-60 h-60 bg-purple-500 rounded-full blur-[100px]" />
+          <div className="bg-slate-900 text-white p-8 rounded-2xl shadow-xl">
+            <h3 className="text-xl font-bold text-blue-400 mb-4">Visión Admin Master</h3>
+            <p className="text-slate-300 mb-4 italic">
+              "Una marca no es lo que decimos, es lo que el consumidor percibe en cada punto de contacto."
+            </p>
+            <ul className="space-y-3 text-slate-400 text-sm">
+              <li>• Integración de Ventas y Marketing.</li>
+              <li>• Análisis de Big Data para decisiones.</li>
+              <li>• Creatividad basada en estrategia.</li>
+              <li>• Tono de voz omnicanal.</li>
+            </ul>
+          </div>
         </div>
-        <h3 className="cim-display text-4xl font-black text-white mb-6 relative z-10">¿Listo para aplicar <br /><span className="italic font-light">lo aprendido?</span></h3>
-        <p className="cim-body text-slate-400 text-base mb-10 max-w-md mx-auto relative z-10">Pon a prueba tu conocimiento interactuando con los mentores en el panel de expertos.</p>
-        <button onClick={() => navigate('dashboard')}
-          className="cim-ui relative z-10 bg-white text-slate-900 px-10 py-5 rounded-2xl font-extrabold transition-transform hover:scale-105 active:scale-95 shadow-2xl">
-          Ir al Panel de Expertos
-        </button>
+
+        <div className="bg-blue-600 text-white p-10 rounded-3xl text-center shadow-blue-200 shadow-2xl">
+          <h3 className="text-2xl font-bold mb-4">Comience su Entrenamiento</h3>
+          <p className="text-blue-100 mb-6 max-w-md mx-auto">Acceda a las conversaciones grabadas para ver la teoría aplicada por nuestros expertos.</p>
+          <button 
+            onClick={() => setView('dashboard')}
+            className="px-8 py-3 bg-white text-blue-600 rounded-xl font-bold hover:bg-slate-50 transition-all transform hover:-translate-y-1"
+          >
+            Abrir Consola de Expertos
+          </button>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/50 selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
-      <style>{globalStyles}</style>
-
-      {/* Modern Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 h-20 flex items-center">
-        <div className="max-w-6xl mx-auto w-full flex justify-between items-center">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('landing')}>
-            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-12 group-active:scale-90">
-              <Target size={24} className="text-blue-400" />
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+      {/* Navigation Bar */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 px-6 py-4 shadow-sm">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div 
+            className="flex items-center gap-2 cursor-pointer group"
+            onClick={() => setView('landing')}
+          >
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform shadow-blue-200 shadow-lg">
+              <ShieldCheck className="w-6 h-6 text-white" />
             </div>
-            <div className="flex flex-col">
-              <span className="cim-ui text-lg font-black text-slate-900 leading-none tracking-tight">AdminMaster</span>
-              <span className="cim-ui text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Simulador CIM</span>
+            <div className="flex flex-col -space-y-1">
+              <span className="font-black text-xl tracking-tighter text-slate-900 italic">ADMIN</span>
+              <span className="font-medium text-xs tracking-widest text-blue-600 uppercase">MASTER</span>
             </div>
           </div>
-
-          <div className="hidden md:flex items-center gap-10">
-            {[
-              { label: 'Inicio', dest: 'landing' },
-              { label: 'Mentores', dest: 'dashboard' },
-              { label: 'Conceptos', dest: 'education' },
-            ].map(item => (
-              <button key={item.dest} 
-                onClick={() => navigate(item.dest)}
-                className={`nav-link cim-ui text-sm font-bold transition-colors ${
-                  view === item.dest || (item.dest === 'dashboard' && view === 'chat') 
-                    ? 'text-slate-900 active' 
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}>
-                {item.label}
-              </button>
-            ))}
+          
+          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-500">
+            <button onClick={() => setView('landing')} className={`hover:text-blue-600 transition-colors uppercase tracking-wider ${view === 'landing' ? 'text-blue-600' : ''}`}>Inicio</button>
+            <button onClick={() => setView('dashboard')} className={`hover:text-blue-600 transition-colors uppercase tracking-wider ${view === 'dashboard' || view === 'chat' ? 'text-blue-600' : ''}`}>Consola</button>
+            <button onClick={() => setView('education')} className={`hover:text-blue-600 transition-colors uppercase tracking-wider ${view === 'education' ? 'text-blue-600' : ''}`}>Manual</button>
           </div>
 
-          <button onClick={() => navigate('dashboard')}
-            className="cim-ui bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all hover:shadow-lg hover:shadow-blue-200 active:scale-95">
-            Iniciar Mentoría
+          <button 
+            onClick={() => setView('dashboard')}
+            className="bg-slate-900 text-white px-6 py-2 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-md active:scale-95 border border-white/10"
+          >
+            Acceso Master
           </button>
         </div>
       </nav>
 
-      {/* Page Content */}
-      <main>
+      {/* Main Content */}
+      <main className="animate-in fade-in slide-in-from-bottom-4 duration-700">
         {view === 'landing' && renderLanding()}
         {view === 'dashboard' && renderDashboard()}
-        {view === 'chat' && selectedBot && renderChat()}
+        {view === 'chat' && renderChat()}
         {view === 'education' && renderEducation()}
       </main>
 
-      {/* Minimal Footer */}
-      <footer className="py-12 border-t border-slate-100 text-center">
-        <div className="flex items-center justify-center gap-3 mb-4 opacity-30">
-          <Target size={16} />
-          <div className="w-1 h-1 rounded-full bg-slate-400" />
-          <BarChart3 size={16} />
-          <div className="w-1 h-1 rounded-full bg-slate-400" />
-          <Palette size={16} />
+      {/* Footer */}
+      <footer className="mt-20 border-t border-slate-200 py-10 text-center">
+        <div className="flex items-center justify-center gap-2 mb-2 text-slate-400 font-bold uppercase text-[10px] tracking-[0.3em]">
+          <ShieldCheck className="w-4 h-4" /> Autenticado por Admin Master
         </div>
-        <p className="cim-ui text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">
-          Simulador Educativo de Comunicación Integrada de Marketing · 2025
-        </p>
+        <p className="text-slate-400 text-xs">© 2024 Admin Master System - Inteligencia Estratégica en CIM</p>
       </footer>
     </div>
   );
-}
+};
+
+export default App;
